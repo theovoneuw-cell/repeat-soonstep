@@ -1,0 +1,1669 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Repeat · by Soonstep</title>
+<meta name="description" content="Boucler un passage, le ralentir sans le désaccorder, repartir sur un vrai compte. L'outil de répétition des profs de danse.">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#7c3aed">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Repeat">
+<link rel="icon" type="image/svg+xml" href="./icons/soonstep-mark.svg">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* ================================================================
+   Charte Soonstep — relevée sur soonstep.com
+   primary 50-900 · neutral (slate) 50-900 · cta (vert) · surface #faf7ff
+   Plus Jakarta Sans 400-800 · rayons full/1rem/.75rem/.5rem
+   Thème clair unique : Soonstep ne définit pas de mode sombre.
+   ================================================================ */
+:root{
+  /* violet de marque */
+  --p50:#f5f3ff; --p100:#ede9fe; --p200:#ddd6fe; --p300:#c4b5fd;
+  --p400:#a78bfa; --p500:#8b5cf6; --p600:#7c3aed; --p700:#6d28d9;
+  --p800:#5b21b6; --p900:#4c1d95;
+  /* neutres */
+  --n50:#f8fafc; --n100:#f1f5f9; --n200:#e2e8f0; --n300:#cbd5e1;
+  --n400:#94a3b8; --n500:#64748b; --n600:#475569; --n700:#334155;
+  --n800:#1e293b; --n900:#0f172a;
+  /* action et alertes */
+  --cta600:#16a34a; --warning600:#d97706; --error600:#dc2626;
+
+  /* rôles */
+  --bg:#faf7ff; --bg2:#ffffff; --surface:#ffffff; --surface2:var(--n50);
+  --line:var(--n200); --line-soft:var(--n100); --frame:var(--n200);
+  --ink:var(--n900); --ink2:var(--n600); --ink3:var(--n400);
+  --accent:var(--p600); --accent-deep:var(--p700); --accent-ink:#ffffff;
+  --accent-soft:var(--p50); --accent-line:var(--p200);
+  --wave:var(--n300); --wave-in:var(--p600);
+  --warn:var(--error600);
+
+  --shadow:0 1px 3px rgba(15,23,42,.08), 0 1px 2px rgba(15,23,42,.04);
+  --shadow-lg:0 10px 22px rgba(124,58,237,.30);
+  --ring:0 0 0 2px #7c3aed, 0 1px 3px #0003;
+
+  --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,'Fira Sans','Droid Sans','Helvetica Neue',sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,'Liberation Mono','Courier New',monospace;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--sans); font-size:16px; line-height:1.5;
+  -webkit-font-smoothing:antialiased; -webkit-text-size-adjust:100%;
+  display:grid; place-items:center;
+}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none;padding:0;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:none;box-shadow:var(--ring)}
+
+/* ---------------- coque téléphone ---------------- */
+.phone{
+  width:min(430px,100vw); height:100dvh; background:var(--bg2);
+  display:flex; flex-direction:column; overflow:hidden; position:relative;
+}
+@media (min-width:520px) and (min-height:640px){
+  body{padding:20px}
+  .phone{
+    height:min(860px, calc(100dvh - 40px)); border-radius:38px;
+    box-shadow:0 0 0 9px var(--frame), 0 26px 60px rgba(20,19,28,.24);
+  }
+}
+
+/* ---------------- barre du haut ---------------- */
+.appbar{
+  display:flex; align-items:center; gap:11px; padding:12px 16px 10px;
+  padding-top:max(12px, env(safe-area-inset-top)); flex:none;
+}
+.mark{display:grid;place-items:center;flex:none}
+.mark svg{height:34px;width:auto;display:block;fill:var(--accent)}
+.appbar .who{flex:1;min-width:0}
+.appbar h1{font-size:19px;font-weight:800;letter-spacing:-.02em;margin:0}
+.appbar .by{font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:0;margin-left:3px}
+.appbar .now-playing{
+  font-size:13.5px;color:var(--ink2);margin:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.counts{display:flex;gap:4px;flex:none}
+.counts span{
+  font-family:var(--mono);font-size:10.5px;color:var(--ink3);background:var(--surface2);
+  border-radius:999px;padding:2px 7px;
+}
+.counts span:last-child{color:var(--accent);background:var(--accent-soft);font-weight:500}
+
+/* ---------------- vague ---------------- */
+.stage{position:relative;flex:none;margin:0 12px;border-radius:1rem;overflow:hidden;background:var(--surface2)}
+canvas#wave{display:block;width:100%;height:142px;touch-action:none}
+@media (max-height:760px){canvas#wave{height:124px}}
+.hint{
+  position:absolute;left:50%;transform:translateX(-50%);top:8px;
+  font-size:11px;color:var(--ink2);font-weight:600;pointer-events:none;transition:opacity .35s;
+  background:rgba(255,255,255,.88);border-radius:999px;padding:5px 12px;white-space:nowrap;
+  max-width:calc(100% - 20px);overflow:hidden;text-overflow:ellipsis;
+}
+.overlay{
+  position:absolute;inset:0;display:none;place-items:center;
+  background:color-mix(in srgb, var(--surface2) 84%, transparent);
+  pointer-events:none;text-align:center;
+}
+.overlay.on{display:grid}
+.overlay .num{
+  font-size:88px;font-weight:800;line-height:.84;letter-spacing:-.05em;
+  color:var(--cta600);font-variant-numeric:tabular-nums;
+}
+.overlay.rest .num{color:var(--ink3)}
+.overlay .cap{
+  font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+  color:var(--ink3);margin-top:10px;
+}
+@media (prefers-reduced-motion:no-preference){
+  .overlay.on .num{animation:pop .18s cubic-bezier(.2,.9,.3,1.4)}
+  @keyframes pop{from{transform:scale(.76);opacity:.2}to{transform:scale(1);opacity:1}}
+}
+
+/* ---------------- bandeau boucle ---------------- */
+.loopbar{
+  display:flex;align-items:center;gap:8px;padding:10px 16px 2px;flex:none;
+}
+.loopbar .badge{
+  font-family:var(--mono);font-size:12.5px;color:var(--ink2);
+  background:var(--surface2);border-radius:999px;padding:6px 12px;white-space:nowrap;
+}
+.loopbar .badge.hot{background:var(--accent-soft);color:var(--accent);font-weight:500}
+.loopbar .grow{flex:1}
+
+/* ---------------- transport ---------------- */
+.transport{
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  padding:10px 16px 6px;flex:none;
+}
+.transport .tbtn{flex:1;max-width:118px}
+.clockline{
+  display:flex;align-items:baseline;justify-content:center;gap:9px;
+  padding:0 16px 8px;flex:none;
+}
+.clockline #btnUndo{margin-left:auto;flex:none}
+.clockline .now{font-family:var(--mono);font-size:18px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.clockline .meta{font-size:13.5px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.planrow{display:flex;align-items:stretch;background:var(--p50);flex:none}
+.loopchip{
+  flex:none;margin:8px 0 8px 14px;padding:0 16px;border-radius:999px;
+  background:var(--surface);border:1.5px solid var(--p200);color:var(--p700);
+  font-size:13.5px;font-weight:800;min-height:38px;
+}
+.loopchip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.link{font-size:14px;font-weight:700;color:var(--accent);padding:8px 6px;min-height:38px;white-space:nowrap}
+.play{
+  width:84px;height:84px;border-radius:50%;background:var(--accent);color:var(--accent-ink);
+  display:grid;place-items:center;flex:none;box-shadow:var(--shadow-lg);
+  transition:transform .14s ease,background .14s ease;
+}
+.play:hover{background:var(--accent-deep)}
+.play:active{transform:scale(.94)}
+.play svg{width:34px;height:34px;fill:currentColor}
+.tbtn{
+  border:1px solid var(--line);background:var(--surface);border-radius:999px;
+  padding:11px 14px;font-size:15px;font-weight:700;color:var(--ink);
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  white-space:nowrap;min-height:48px;width:100%;transition:all .12s;
+}
+.tbtn:active{transform:scale(.97)}
+.tbtn.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* ---------------- zoom de la vague ---------------- */
+.zoom{display:flex;gap:5px;flex:none}
+.zoom button{
+  min-width:34px;height:34px;padding:0 7px;border-radius:999px;
+  background:var(--surface);border:1px solid var(--line);color:var(--ink2);
+  font-size:16px;font-weight:700;line-height:1;display:grid;place-items:center;
+}
+.zoom button.w{font-size:12.5px;font-weight:700;padding:0 11px}
+.zoom button:active{background:var(--p50);border-color:var(--accent);color:var(--accent)}
+
+/* ---------------- ligne « ce qui va se passer » ---------------- */
+.plan{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  flex:1;min-width:0;padding:10px 14px;color:var(--p700);
+  font-size:13px;font-weight:600;text-align:left;
+}
+.plan > span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan .chev{color:var(--accent);font-weight:800;white-space:nowrap}
+.plan:active{background:var(--p100)}
+
+/* ---------------- prise en main ---------------- */
+.steps{
+  margin:0;padding-left:1.35em;display:flex;flex-direction:column;gap:9px;
+  font-size:14px;color:var(--ink2);line-height:1.5;
+}
+.steps li::marker{color:var(--accent);font-weight:800}
+.steps b{color:var(--ink)}
+
+/* ---------------- confirmation ---------------- */
+.toast{
+  position:absolute;left:50%;transform:translateX(-50%) translateY(8px);
+  bottom:86px;z-index:5;background:var(--n900);color:#fff;
+  padding:11px 18px;border-radius:999px;font-size:14px;font-weight:700;
+  box-shadow:0 8px 20px rgba(15,23,42,.28);
+  opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+  max-width:calc(100% - 36px);text-align:center;
+}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ---------------- zone défilante ---------------- */
+.views{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;border-top:1px solid var(--line-soft);padding-bottom:10px}
+.set{padding:14px 18px;border-bottom:1px solid var(--line-soft);display:flex;flex-direction:column;gap:10px}
+.set:last-child{border-bottom:none}
+.setlbl{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--ink2);
+}
+.setlbl.sub{margin-top:2px}
+.readout{font-size:13.5px;color:var(--ink2);text-transform:none;letter-spacing:0;font-weight:600}
+.readout b{color:var(--ink);font-weight:600;font-family:var(--mono)}
+.note{margin:0;font-size:13.5px;color:var(--ink2);line-height:1.5}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{
+  border:1px solid var(--line);border-radius:999px;padding:10px 17px;min-height:46px;
+  font-size:14.5px;font-weight:600;color:var(--ink);background:var(--surface);
+  display:inline-flex;align-items:center;justify-content:center;transition:all .12s;
+}
+    .chips.big{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.chips.big .chip{min-width:0;padding:10px 4px;font-size:15px;min-height:52px;font-weight:700}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:500}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;height:6px;border-radius:4px;
+  background:var(--surface2);width:100%;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:26px;height:26px;border-radius:50%;
+  background:var(--accent);border:4px solid var(--bg2);box-shadow:var(--shadow);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;background:var(--accent);
+  border:4px solid var(--bg2);cursor:pointer;
+}
+.tempo{display:flex;align-items:center;gap:10px}
+.numin{
+  width:76px;background:var(--surface);border:1px solid var(--line);border-radius:.75rem;
+  padding:9px 8px;font-family:var(--mono);font-size:15px;text-align:center;
+}
+.tempo .unit{font-size:12.5px;color:var(--ink3)}
+.tempo{display:flex;align-items:center;gap:9px}
+.tempo .unit{margin-right:auto}
+.tempo .tbtn{width:auto;padding:9px 15px}
+.tempo.two .tbtn{flex:1}
+.tbtn.sm{padding:7px 12px;font-size:12.5px;min-height:34px;font-family:var(--mono);font-weight:500}
+.tempo .tbtn[disabled]{opacity:.5}
+
+/* ---------------- bibliothèque & sections ---------------- */
+.import{
+  display:block;width:100%;border:1.5px dashed var(--line);border-radius:1rem;
+  padding:22px;text-align:center;color:var(--ink2);font-size:15.5px;font-weight:700;
+  background:transparent;transition:all .14s;
+}
+.import:hover,.drag .import{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.import small{display:block;color:var(--ink2);font-size:13px;font-weight:400;margin-top:4px}
+.tracks{display:flex;flex-direction:column;gap:5px}
+.track{
+  display:flex;align-items:center;gap:12px;padding:14px 12px;border-radius:.75rem;
+  border:1px solid transparent;text-align:left;width:100%;
+}
+.track.on{background:var(--accent-soft);border-color:var(--accent-line)}
+.track .dot{width:8px;height:8px;border-radius:50%;background:var(--line);flex:none}
+.track.on .dot{background:var(--accent)}
+.track .nm{flex:1;min-width:0;font-size:15.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track.on .nm{color:var(--accent)}
+.track .du{font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+.track.broken .nm{color:var(--ink3)}
+.track.broken .du{color:var(--warn);font-family:var(--sans);font-weight:700}
+.kill{color:var(--ink3);font-size:19px;line-height:1;padding:4px 7px;border-radius:8px}
+.kill:hover{color:var(--warn);background:var(--surface2)}
+
+.secs{display:flex;flex-direction:column;gap:8px}
+.sec{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:11px;align-items:center;
+  padding:11px;border-radius:.75rem;border:1px solid var(--line-soft);background:var(--surface);
+}
+.sec.on{border-color:var(--accent-line);background:var(--accent-soft)}
+.sec .go{
+  width:46px;height:46px;border-radius:50%;display:grid;place-items:center;flex:none;
+  background:var(--surface2);color:var(--ink2);
+}
+.sec.on .go{background:var(--accent);color:var(--accent-ink)}
+.sec .go svg{width:12px;height:12px;fill:currentColor}
+.sec .body{min-width:0}
+.sec input.nm{
+  width:100%;background:none;border:none;padding:0;font-size:15.5px;font-weight:700;
+  border-bottom:1px solid transparent;letter-spacing:-.01em;
+}
+.sec input.nm:focus{outline:none;border-bottom-color:var(--accent)}
+.sec .rng{font-family:var(--mono);font-size:12.5px;color:var(--ink2);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.sec .acts{display:flex;flex-direction:column;gap:2px}
+.sec .acts button{color:var(--ink2);font-size:12.5px;padding:8px 9px;border-radius:8px;font-weight:700}
+.sec .acts button:active{background:var(--surface2)}
+.empty{color:var(--ink2);font-size:14px;line-height:1.6;margin:0}
+.wide{
+  width:100%;border-radius:.75rem;background:var(--accent);color:var(--accent-ink);
+  padding:15px;font-size:15.5px;font-weight:700;text-align:center;min-height:52px;box-shadow:var(--shadow-lg);
+}
+.wide:active{transform:scale(.985)}
+.wide.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent-line);box-shadow:none}
+
+/* ---------------- onglets ---------------- */
+.tabbar{
+  display:flex;flex:none;border-top:1px solid var(--line-soft);background:var(--bg2);
+  padding:7px 8px; padding-bottom:max(7px, env(safe-area-inset-bottom));
+}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 4px;border-radius:.75rem;color:var(--ink2);font-size:11.5px;font-weight:700;
+  letter-spacing:.01em;
+}
+.tab .lbl{display:inline-flex;align-items:center;gap:5px}
+.tab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tab.on{color:var(--accent);background:var(--accent-soft)}
+.tab .pill{
+  font-style:normal;font-size:10px;background:var(--n200);border-radius:999px;
+  padding:1px 6px;color:var(--ink2);line-height:1.4;
+}
+.tab.on .pill{background:var(--accent);color:var(--accent-ink)}
+</style>
+</head>
+<body>
+<div class="phone" id="drop">
+  <header class="appbar">
+    <div class="mark"><svg viewBox="0 0 393.44 522.4" aria-hidden="true"><path d="M331.93,56C294.59,18.67,245.65,0,196.72,0S98.84,18.67,61.5,56C-13.18,130.68-22.99,236.13,49.42,343.14c11.71,17.31,30.9,42.9,51.63,69.73,10.92,14.12,22.26,28.6,33.15,42.4,2.34,2.97,4.67,5.9,6.96,8.79,16.18,20.43,30.91,38.77,41.12,51.45,7.43,9.19,21.45,9.19,28.87,0,10.25-12.71,25.02-31.12,41.25-51.61,2.38-2.99,4.78-6.03,7.21-9.11,10.92-13.84,22.28-28.34,33.21-42.48,20.56-26.63,39.57-51.98,51.2-69.17,72.4-107.01,62.59-212.46-12.09-287.14ZM213.1,347.19c-.14,3.89-.13,11.62-.12,18.09,0,7.8.02,16.63-.15,23.4-.1,3.79-.25,6.64-.46,8.71-.26,2.59-.79,7.96-5.98,9.04-.72.15-1.47.23-2.2.23-2.47,0-6.18-.87-9.8-5-7.3-8.35-11.77-28.09-10.71-36.06.67-5.02.46-12.3-.42-18.12-77.29-6.8-137.9-71.71-137.9-150.76,0-83.6,67.76-151.37,151.36-151.37,20.93,0,40.86,4.25,58.99,11.93l.56-.56c5.36-5.47,12.03-12.28,20.97-14.51,1.49-.37,3.01-.56,4.5-.56,2.83,0,5.53.7,7.79,2.02,3.6,2.1,5.78,5.44,5.84,8.93.09,5.58-4.53,9.01-7.29,11.07-.42.3-.85.62-1.07.81-1.52,1.28-3.23,2.83-4.35,4.56-.45.68-.91,1.39-1.37,2.13,40.29,27.2,66.78,73.28,66.78,125.55,0,78.05-59.08,142.31-134.97,150.47Z"/><path d="M288.89,52.7c.05,2.84-4.21,5.26-6.06,6.82-2.09,1.77-4.1,3.67-5.6,5.98-.45.69-.91,1.41-1.39,2.16-10.7,16.8-27.36,46.58-33.84,54.75-3.61,4.55-7.4,9.49-9.16,15.1-1.71,5.43-.47,10.9-.23,16.46.71,15.55-1.65,29.98-3.82,45.22-.16,1.08-.25,2.31.44,3.15.43.53,1.09.82,1.74,1.07,14.45,5.8,31.49,8.56,43.69,18.87,7.05,5.97,10.3,17.88-3.25,31.98-13.55,14.09-54.41,43.45-58.75,44.58l-1.41-20s30.34-30,31.42-33.26c.71-2.11-3.85-3.31-7.14-3.89-1.76-.31-3.54-.42-5.32-.4-4.7.08-15.66.14-19.25-1.13,0,0-6.23,25.48-4.61,37.94,1.63,12.47,1.63,61.25.54,65.59-.14.58-.24,2.01-.3,4.06-.4,13.19.6,51.89-1.52,52.33-9.1,1.88-16.06-25.5-14.98-33.63.7-5.28.56-12.44-.24-18.54-.27-2.07-.62-4.01-1.03-5.72-2.27-9.44-5.64-19.32-6.34-29.03-1.03-14.2-4.61-26.27-6.73-40.39-2.09-13.93-4.29-27.93-4.35-42.05-.02-4.5.03-9.02.64-13.49.63-4.57,2.21-8.82,3.31-13.27,2.34-9.5,3.52-19.54,1.34-29.18-1.57-6.94-5.71-13.67-12.2-16.56-3.5-1.55-7.41-1.9-11.23-2.22-11.95-1-23.85-2.09-35.8-2.38-8.99-.22-20.95-1.54-29.4,2.38-8.56,3.98-21.79,11.49-24.65,4.05-.74-1.92-.36-4.09.76-5.82,3.43-5.25,15.14-16.98,52.2-20.31,22.39-2.01,49.51-1.27,71.6-5.97,11.21-2.38,19.61-8,27.72-15.42,8.28-7.57,15.3-15.92,22.21-24.58,7.02-8.81,14.07-17.67,21.99-25.71.69-.7,1.39-1.42,2.1-2.14,4.79-4.85,10.16-9.97,16.81-11.63,2.44-.61,5.24-.52,7.46.77,1.17.68,2.6,1.97,2.62,3.44Z"/><circle cx="182.92" cy="94.13" r="28.05"/></svg></div>
+    <div class="who">
+      <h1>Repeat <span class="by">by Soonstep</span></h1>
+      <p class="now-playing" id="trackName">Aucun morceau</p>
+    </div>
+    <div class="counts"><span>5</span><span>6</span><span>7</span><span>8</span></div>
+  </header>
+
+  <div class="stage">
+    <canvas id="wave"></canvas>
+    <div class="hint" id="hint">Pincez pour zoomer · glissez pour déplacer</div>
+    <div class="overlay" id="overlay"><div><div class="num" id="ovNum">8</div><div class="cap" id="ovCap">départ</div></div></div>
+  </div>
+
+  <div class="loopbar">
+    <span class="badge hot" id="badgeLoop">—</span>
+    <span class="grow"></span>
+    <div class="zoom">
+      <button id="zoomOut" aria-label="Voir plus large">−</button>
+      <button id="zoomIn" aria-label="Voir de plus près">+</button>
+      <button id="zoomFit" class="w">Passage</button>
+      <button id="zoomAll" class="w">Tout</button>
+    </div>
+  </div>
+
+  <div class="transport">
+    <button class="tbtn" id="btnA">Début</button>
+    <button class="play" id="btnPlay" aria-label="Lecture ou pause">
+      <svg id="icPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="tbtn" id="btnB">Fin</button>
+  </div>
+
+  <div class="clockline">
+    <span class="now" id="timeNow">0:00.0</span>
+    <span class="meta" id="timeMeta">—</span>
+    <button class="link" id="btnUndo" hidden>Annuler</button>
+  </div>
+
+  <div class="planrow">
+    <button class="loopchip" id="btnLoop">Boucle</button>
+    <button class="plan" id="planLine"><span id="planText">—</span><span class="chev">Réglages ›</span></button>
+  </div>
+
+  <!-- ============ RÉPÉTER ============ -->
+  <div class="views" id="viewLoop">
+    <div class="set" id="onboard" hidden>
+      <div class="setlbl">Prise en main <button class="link" id="dismissOb">masquer</button></div>
+      <ol class="steps">
+        <li>Importez vos musiques depuis l'onglet <b>Musiques</b>.</li>
+        <li>Lancez la lecture, puis tapez <b>Début</b> et <b>Fin</b> au moment où le passage commence et se termine.</li>
+        <li>Ça tourne en boucle. <b>Mémorisez</b> le passage pour le retrouver au prochain cours.</li>
+      </ol>
+    </div>
+
+    <div class="set" id="installBox" hidden>
+      <div class="setlbl">Installer Repeat</div>
+      <div id="installBody"></div>
+    </div>
+
+    <div class="set">
+      <div class="setlbl">Vitesse <span class="readout"><b id="speedVal">100 %</b> · <span id="speedBpm">100 bpm perçus</span></span></div>
+      <div class="chips big" id="speedChips"></div>
+      <input type="range" id="speed" min="40" max="120" step="1" value="100" aria-label="Vitesse de lecture">
+    </div>
+
+    <div class="set">
+      <button class="wide ghost" id="btnMemo2">Mémoriser ce passage</button>
+      <button class="wide ghost" id="btnAll">Revenir au morceau entier</button>
+    </div>
+  </div>
+
+  <!-- ============ PASSAGES ============ -->
+  <div class="views" id="viewSecs" hidden>
+    <div class="set">
+      <button class="wide" id="addSec">Mémoriser le passage courant</button>
+      <div class="secs" id="secs"></div>
+    </div>
+  </div>
+
+  <!-- ============ MUSIQUES ============ -->
+  <div class="views" id="viewLib" hidden>
+    <div class="set">
+      <button class="import" id="btnImport">
+        Importer des musiques
+        <small>ou déposez vos fichiers ici · mp3, m4a, wav</small>
+      </button>
+      <input type="file" id="file" accept="audio/*" multiple hidden>
+      <div class="tracks" id="tracks"></div>
+      <p class="note">Vos musiques restent sur cet appareil : rien n'est envoyé, et la bibliothèque se recharge à la prochaine ouverture.</p>
+    </div>
+  </div>
+
+  <!-- ============ RÉGLAGES ============ -->
+  <div class="views" id="viewSet" hidden>
+    <div class="set">
+      <div class="setlbl">Mesure du morceau</div>
+      <div class="chips" id="mesureChips"></div>
+      <p class="note" id="mesureNote"></p>
+    </div>
+    <div class="set">
+      <div class="setlbl">Compte de départ</div>
+      <div class="chips" id="countChips"></div>
+      <p class="note" id="countNote">un clic sur 5-6-7-8 avant chaque reprise</p>
+    </div>
+    <div class="set">
+      <div class="setlbl">Nombre de reprises</div>
+      <div class="chips" id="repChips"></div>
+      <div class="setlbl sub">Pause entre les reprises</div>
+      <div class="chips" id="restChips"></div>
+      <p class="note">La pause laisse aux danseurs le temps de se replacer avant le compte.</p>
+    </div>
+    <div class="set">
+      <div class="setlbl">Repères</div>
+      <div class="chips" id="snapChips"></div>
+      <p class="note" id="snapNote">Début et fin se calent sur le temps le plus proche : la boucle tombe juste sans réglage au doigt.</p>
+    </div>
+    <div class="set">
+      <div class="setlbl">Tempo</div>
+      <div class="tempo">
+        <input class="numin" id="bpm" type="number" min="30" max="240" step="1" value="100" aria-label="Tempo en battements par minute">
+        <span class="unit">bpm</span>
+        <button class="tbtn sm" id="halfBpm" title="Moitié du tempo">÷ 2</button>
+        <button class="tbtn sm" id="dblBpm" title="Double du tempo">× 2</button>
+      </div>
+      <div class="tempo two">
+        <button class="tbtn" id="detect">Analyser le morceau</button>
+        <button class="tbtn" id="tap">Taper le tempo</button>
+      </div>
+      <p class="note" id="bpmNote">sert au compte de départ et au repérage en 8-temps sur la vague</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <nav class="tabbar">
+    <button class="tab on" id="tabLoop"><svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>Répéter</button>
+    <button class="tab" id="tabSecs"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg><span class="lbl">Passages<i class="pill" id="secCount" hidden>0</i></span></button>
+    <button class="tab" id="tabLib"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Musiques</button>
+    <button class="tab" id="tabSet"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.7 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.6 1z"/></svg>Réglages</button>
+  </nav>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+const fmt = t => { if(!isFinite(t)||t<0) t=0; const m=Math.floor(t/60), s=t-m*60; return m+":"+(s<10?"0":"")+s.toFixed(1); };
+const fmtS = t => { if(!isFinite(t)||t<0) t=0; const m=Math.floor(t/60); return m+":"+String(Math.round(t-m*60)).padStart(2,"0"); };
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+/* ---------------- stockage local ---------------- */
+let _db = null;
+function idb(){
+  return new Promise(res=>{
+    if(_db) return res(_db);
+    let r; try{ r = indexedDB.open("repete",1); }catch(e){ return res(null); }
+    r.onupgradeneeded = () => { try{ r.result.createObjectStore("tracks",{keyPath:"id"}); }catch(e){} };
+    r.onsuccess = () => { _db = r.result; res(_db); };
+    r.onerror = () => res(null);
+  });
+}
+async function dbAll(){
+  const db = await idb(); if(!db) return [];
+  return new Promise(res=>{ try{
+    const rq = db.transaction("tracks").objectStore("tracks").getAll();
+    rq.onsuccess = () => res(rq.result||[]); rq.onerror = () => res([]);
+  }catch(e){ res([]); } });
+}
+async function dbPut(t){
+  if(!t || t.demo) return; const db = await idb(); if(!db) return;
+  try{
+    db.transaction("tracks","readwrite").objectStore("tracks").put({
+      id:t.id, name:t.name, blob:t.blob, duration:t.duration, peaks:t.peaks,
+      bpm:t.bpm, bpmInfo:t.bpmInfo, beat0:t.beat0, beatPer:t.beatPer, head:t.head, mesure:t.mesure, snap:t.snap, a:t.a, b:t.b, speed:t.speed, loop:t.loop, sections:t.sections, added:t.added
+    });
+  }catch(e){}
+}
+async function dbDel(id){
+  const db = await idb(); if(!db) return;
+  try{ db.transaction("tracks","readwrite").objectStore("tracks").delete(id); }catch(e){}
+}
+let saveTimer = null;
+function save(t){ clearTimeout(saveTimer); saveTimer = setTimeout(()=>dbPut(t||cur()), 350); }
+
+/* ---------------- forme d'onde ---------------- */
+const PEAK_N = 14000;
+function peaksFrom(data, n){
+  const out = new Float32Array(n*2), step = data.length/n;
+  for(let i=0;i<n;i++){
+    const s = Math.floor(i*step), e = Math.min(data.length, Math.floor((i+1)*step));
+    let mn = 1, mx = -1;
+    for(let j=s;j<e;j+=1){ const v = data[j]; if(v<mn) mn=v; if(v>mx) mx=v; }
+    if(mn>mx){ mn=0; mx=0; }
+    out[i*2]=mn; out[i*2+1]=mx;
+  }
+  return out;
+}
+function peaksFromBuffer(buf){
+  const L = buf.getChannelData(0);
+  if(buf.numberOfChannels<2) return peaksFrom(L, PEAK_N);
+  const R = buf.getChannelData(1), mix = new Float32Array(L.length);
+  for(let i=0;i<L.length;i++) mix[i] = (L[i]+R[i])*0.5;
+  return peaksFrom(mix, PEAK_N);
+}
+
+/* ---------------- analyse du tempo ----------------
+   Flux d'énergie positif (onsets) puis autocorrélation peignée, avec un a priori
+   log-normal autour de 120 bpm pour trancher les erreurs d'octave (64 vs 128). */
+function analyseTempo(buf){
+  const sr = buf.sampleRate;
+  const c0 = buf.getChannelData(0);
+  const c1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : null;
+
+  const span = Math.min(buf.length, Math.round(90*sr));      // 90 s au centre suffisent
+  const off  = Math.max(0, Math.round((buf.length-span)/2));
+  const hop  = Math.max(1, Math.round(sr/172));               // ~5,8 ms
+  const win  = hop*2;
+  const nf   = Math.floor((span-win)/hop);
+  if(nf < 260) return null;                                   // trop court pour conclure
+
+  const env = new Float32Array(nf);
+  for(let f=0; f<nf; f++){
+    let e = 0; const i0 = off+f*hop;
+    for(let i=i0; i<i0+win; i++){ const v = c1 ? (c0[i]+c1[i])*0.5 : c0[i]; e += v*v; }
+    env[f] = Math.log(1 + 400*Math.sqrt(e/win));
+  }
+
+  const nov = new Float32Array(nf);
+  for(let f=1; f<nf; f++){ const d = env[f]-env[f-1]; nov[f] = d > 0 ? d : 0; }
+  const sm = new Float32Array(nf);
+  for(let f=1; f<nf-1; f++) sm[f] = (nov[f-1]+2*nov[f]+nov[f+1])/4;
+  let mean = 0; for(let f=0; f<nf; f++) mean += sm[f]; mean /= nf;
+  for(let f=0; f<nf; f++) sm[f] -= mean;
+
+  const fps = sr/hop;
+  const lagMin = Math.max(2, Math.floor(fps*60/190));
+  const lagMax = Math.min(nf-2, Math.ceil(fps*60/70));
+  if(lagMax <= lagMin+2) return null;
+
+  const acMax = Math.min(nf-2, lagMax*3+3);
+  const ac = new Float32Array(acMax+1);
+  for(let L=lagMin; L<=acMax; L++){
+    let s2 = 0; const n = nf-L;
+    for(let i=0; i<n; i++) s2 += sm[i]*sm[i+L];
+    ac[L] = s2/n;
+  }
+  const at = L => { L = Math.round(L); return (L >= lagMin && L < ac.length) ? ac[L] : 0; };
+  const prior = bpm => { const x = Math.log2(bpm/130)/0.7; return Math.exp(-0.5*x*x); };
+
+  const sc = new Float32Array(lagMax+1);
+  let best = lagMin, sum = 0, n = 0;
+  for(let L=lagMin; L<=lagMax; L++){
+    const v = (at(L) + 0.5*at(2*L)) * prior(60*fps/L);
+    sc[L] = v; sum += Math.abs(v); n++;
+    if(v > sc[best]) best = L;
+  }
+
+  // interpolation parabolique pour dégrossir la période
+  let L = best;
+  if(L > lagMin && L < lagMax){
+    const a = sc[L-1], b = sc[L], c = sc[L+1], den = a-2*b+c;
+    if(den !== 0) L += clamp(0.5*(a-c)/den, -0.5, 0.5);
+  }
+
+  // Raffinage conjoint période + phase.
+  // Indispensable : une période fausse de 0,4 % dérive d'un demi-temps en 70 s,
+  // et le repère se poserait à contretemps.
+  const comb = (Lc, ph) => {
+    let acc = 0;
+    for(let k=0;;k++){
+      const f = Math.round(ph + k*Lc);
+      if(f >= nf) break;
+      for(let d=-1; d<=1; d++){ const g = f+d; if(g >= 0 && g < nf) acc += sm[g]; }
+    }
+    return acc;
+  };
+  let bestL = L, bestPh = 0, bestV = -Infinity, phConf = 0;
+  for(let i=0; i<41; i++){
+    const Lc = L*(1 + 0.015*(2*i/40 - 1));
+    const Li = Math.max(1, Math.round(Lc));
+    let sum2 = 0, n2 = 0, bv = -Infinity, bp = 0;
+    for(let ph=0; ph<Li; ph++){
+      const v = comb(Lc, ph);
+      sum2 += Math.abs(v); n2++;
+      if(v > bv){ bv = v; bp = ph; }
+    }
+    if(bv > bestV){ bestV = bv; bestL = Lc; bestPh = bp; phConf = sum2 > 0 ? bv/(sum2/n2) : 0; }
+  }
+
+  const period = bestL/fps;                    // période exacte, en secondes
+  const bpm = Math.round(60/period);
+  const conf = sum > 0 ? sc[best]/(sum/n) : 0;
+  if(bpm < 70 || bpm > 190) return null;
+
+  // Mesure : la périodicité à 3 temps l'emporte-t-elle sur celle à 4 ?
+  // Séparation nette sur nos cas d'essai (4/4 ≤ 0,77 · valses ≥ 1,01) mais marge
+  // étroite : on ne s'en sert que pour proposer, jamais pour imposer.
+  const m3 = at(3*bestL) + 0.5*at(6*bestL);
+  const m4 = at(4*bestL) + 0.5*at(8*bestL);
+  const rMesure = m3/Math.max(m4, 1e-9);
+
+  return { bpm, period, conf, phConf, beat0: (off + bestPh*hop)/sr,
+           mesure: rMesure > 0.90 ? 3 : 4,
+           mesureSure: rMesure > 1.05 || rMesure < 0.80 };
+}
+/* Premier son réel du fichier : silence d'intro + délai d'encodage MP3
+   (un décodeur ajoute systématiquement ~25 ms de silence en tête). */
+function firstSound(buf){
+  const sr = buf.sampleRate, ch = buf.getChannelData(0);
+  let peak = 0;
+  for(let i=0; i<ch.length; i+=13){ const v = Math.abs(ch[i]); if(v > peak) peak = v; }
+  if(peak < 1e-4) return 0;
+  const seuil = Math.max(peak*0.02, 0.0015);       // ~34 dB sous le pic
+  const win = Math.max(1, Math.round(sr*0.005));   // fenêtres de 5 ms
+  const limite = Math.min(ch.length, Math.round(sr*30));
+  for(let i=0; i+win<limite; i+=win){
+    let m = 0;
+    for(let j=i; j<i+win; j++){ const v = Math.abs(ch[j]); if(v > m) m = v; }
+    if(m > seuil) return Math.max(0, i/sr - 0.004);
+  }
+  return 0;
+}
+/* Point de départ qui saute le blanc d'intro.
+   On vise le temps le PLUS PROCHE du premier son, pas le suivant : l'attaque
+   d'un morceau tombe souvent quelques millisecondes avant le temps nominal, et
+   prendre le suivant couperait le premier coup. Garde-fou : on ne recule jamais
+   de plus d'un quart de temps avant le premier son. */
+function startAfterBlank(t){
+  const h = t && t.head ? t.head : 0;
+  if(h <= 0.02) return 0;
+  if(!t || t.beat0 == null) return h;
+  const per = t.beatPer || 60/(t.bpm||100);
+  let v = t.beat0 + Math.round((h - t.beat0)/per)*per;
+  if(v < h - per*0.25) v += per;   // trop en amont : on prend le temps suivant
+  if(v > h) v = h;                 // jamais après le premier son : l'attaque serait rognée
+  return clamp(v, 0, Math.max(0, t.duration - 0.5));
+}
+
+function tempoNote(det){
+  if(!det) return "morceau trop court ou trop peu rythmé pour l'analyse";
+  return det.conf >= 8
+    ? "tempo détecté : " + det.bpm + " bpm. Les repères se calent sur les temps. Si le tempo paraît deux fois trop lent ou trop rapide, appuyez sur ÷2 ou ×2."
+    : "tempo estimé à " + det.bpm + " bpm — le rythme est peu marqué, vérifiez à l'oreille.";
+}
+
+/* ---------------- morceau de démonstration ---------------- */
+function wavBlob(data, sr){
+  const n = data.length, buf = new ArrayBuffer(44+n*2), v = new DataView(buf);
+  const str = (o,s)=>{ for(let i=0;i<s.length;i++) v.setUint8(o+i, s.charCodeAt(i)); };
+  str(0,"RIFF"); v.setUint32(4, 36+n*2, true); str(8,"WAVEfmt ");
+  v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sr,true); v.setUint32(28,sr*2,true); v.setUint16(32,2,true); v.setUint16(34,16,true);
+  str(36,"data"); v.setUint32(40,n*2,true);
+  for(let i=0;i<n;i++){ const s = clamp(data[i],-1,1); v.setInt16(44+i*2, s<0?s*0x8000:s*0x7FFF, true); }
+  return new Blob([buf],{type:"audio/wav"});
+}
+function makeDemo(){
+  const sr=44100, bpm=100, beat=60/bpm, bar=beat*4, bars=24, dur=bars*bar;
+  const n = Math.ceil(dur*sr), out = new Float32Array(n);
+  const add = (t,d,fn) => { const i0=Math.max(0,Math.floor(t*sr)), i1=Math.min(n, i0+Math.floor(d*sr));
+    for(let i=i0;i<i1;i++) out[i] += fn((i-i0)/sr); };
+  const kick = t => add(t,.45, x => Math.sin(2*Math.PI*(48+95*Math.exp(-x*30))*x)*Math.exp(-x*7)*.95);
+  const clap = t => add(t,.20, x => (Math.random()*2-1)*Math.exp(-x*26)*.30);
+  const hat  = t => add(t,.05, x => (Math.random()*2-1)*Math.exp(-x*80)*.10);
+  const note = (t,f,d,g) => add(t,d, x => { const e = Math.min(1,x*80)*Math.exp(-x*3.4);
+    return (Math.sin(2*Math.PI*f*x)*.62 + Math.sin(4*Math.PI*f*x)*.18)*e*g; });
+  const roots = [220, 196, 174.61, 246.94], mel = [0,4,7,12,7,4,2,0];
+  for(let b=0;b<bars;b++){
+    const t0 = b*bar, ph = Math.floor(b/8), root = roots[b%4];
+    kick(t0); kick(t0+beat*2); if(ph>=1) kick(t0+beat*2.5);
+    if(ph>=1){ clap(t0+beat); clap(t0+beat*3); for(let i=0;i<8;i++) hat(t0+i*beat/2); }
+    note(t0, root/2, bar*.92, .45);
+    if(ph>=1) for(let i=0;i<4;i++)
+      note(t0+i*beat, root*Math.pow(2, mel[(b*4+i)%8]/12)*(ph>=2?2:1), beat*.92, .15);
+  }
+  let peak = 0; for(let i=0;i<n;i++) peak = Math.max(peak, Math.abs(out[i]));
+  const g = peak>0 ? .88/peak : 1;
+  const fade = Math.floor(sr*.06);
+  for(let i=0;i<n;i++){
+    let e = g;
+    if(i<fade) e *= i/fade;
+    if(i>n-fade) e *= (n-i)/fade;
+    out[i] *= e;
+  }
+  const blob = wavBlob(out, sr);
+  return {
+    id:"demo", demo:true, name:"Démo synthétique · 100 bpm", blob, url:URL.createObjectURL(blob),
+    duration:dur, peaks:peaksFrom(out, PEAK_N), bpm:100, beat0:0, beatPer:60/100, head:0, mesure:4, snap:true, speed:1, loop:true,
+    a:bar*8, b:bar*16, added:0,
+    sections:[
+      {id:uid(), name:"Échauffement", a:0,       b:bar*8},
+      {id:uid(), name:"Passage bras", a:bar*8,   b:bar*16},
+      {id:uid(), name:"Final",        a:bar*16,  b:bar*24}
+    ]
+  };
+}
+
+/* ---------------- état ---------------- */
+const S = { tracks:[], cur:null, running:false, repIndex:0, countIn:4, reps:0, rest:0,
+            lat:0.05, attente:null };   // lat : latence de démarrage du lecteur, mesurée en continu
+const cur = () => S.tracks.find(t => t.id===S.cur) || null;
+
+/* ---------------- audio ---------------- */
+const audio = new Audio();
+audio.preload = "auto";
+try{ audio.preservesPitch = true; audio.mozPreservesPitch = true; audio.webkitPreservesPitch = true; }catch(e){}
+let ac = null;
+function actx(){
+  try{ if(!ac) ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+  if(ac && ac.state === "suspended") ac.resume();
+  return ac;
+}
+let sonsPrevus = [];
+function tickAt(c, when, accent){
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = "triangle"; o.frequency.value = accent ? 1250 : 880;
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(accent ? .55 : .34, when+.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, when+.12);
+  o.connect(g).connect(c.destination);
+  o.start(when); o.stop(when+.14);
+  sonsPrevus.push(o);
+}
+function annulerSons(){
+  sonsPrevus.forEach(o => { try{ o.stop(0); o.disconnect(); }catch(e){} });
+  sonsPrevus = [];
+}
+
+/* ---------------- moteur de boucle ---------------- */
+let timers = [];
+const clearTimers = () => { timers.forEach(clearTimeout); timers = []; };
+function showOv(num, cap, rest){
+  $("#ovNum").textContent = num; $("#ovCap").textContent = cap;
+  $("#overlay").classList.toggle("rest", !!rest);
+  $("#overlay").classList.add("on");
+}
+function hideOv(){ $("#overlay").classList.remove("on"); }
+
+let prepRaf = 0;
+function beginRep(){
+  const t = cur(); if(!t) return;
+  clearTimers(); annulerSons(); cancelAnimationFrame(prepRaf);
+  audio.pause(); audio.currentTime = t.a;
+
+  const rest = (S.repIndex > 0 ? S.rest : 0);
+  const cnt = S.countIn;
+  const go = () => { hideOv(); audio.currentTime = t.a; audio.play().catch(()=>{}); };
+  if(!rest && !cnt){ go(); return; }
+
+  const c = actx();
+  const beat = 60/((t.bpm||100)*t.speed);          // un temps à la vitesse réellement entendue
+  const AVANCE = 0.08;                             // marge pour programmer proprement les clics
+  const t0 = c ? c.currentTime + AVANCE : 0;
+
+  // Les clics sont posés sur l'horloge audio : setTimeout dérive de plusieurs
+  // dizaines de millisecondes sous charge, ce qui s'entend sur un compte.
+  if(cnt && c) for(let i=0; i<cnt; i++) tickAt(c, t0 + rest + i*beat, i === 0);
+
+  // Les chiffres, eux, peuvent rester sur des minuteurs : l'œil ne voit pas 10 ms.
+  // Les chiffres sont décalés de la même avance que les clics, sinon l'œil
+  // devance l'oreille de 80 ms.
+  if(rest){
+    const secs = Math.round(rest);
+    for(let i=0; i<secs; i++) timers.push(setTimeout(() => showOv(secs-i, "replacez-vous", true), (AVANCE + i)*1000));
+  }
+  if(cnt){
+    // « 5-6-7-8 » en 4 temps ; en valse on compte la mesure de préparation
+    const labels = cnt === 4 ? [5,6,7,8] : Array.from({length:cnt}, (_, i) => i+1);
+    for(let i=0; i<cnt; i++)
+      timers.push(setTimeout(() => showOv(labels[i], "départ"), (AVANCE + rest + i*beat)*1000));
+  }
+
+  const depart = t0 + rest + cnt*beat;
+  if(!c){ timers.push(setTimeout(go, (AVANCE + rest + cnt*beat)*1000)); return; }
+  // On appelle play() en avance de la latence mesurée du lecteur, pour que le
+  // son commence exactement sur le temps qui suit le « 8 ».
+  const attendre = () => {
+    if(!S.running) return;
+    if(c.currentTime >= depart - S.lat - 0.008){
+      S.attente = { appel: c.currentTime, cible: depart, base: t.a };
+      go();
+    } else prepRaf = requestAnimationFrame(attendre);
+  };
+  attendre();
+}
+function endRep(){
+  S.repIndex++;
+  const t = cur();
+  if(S.reps && S.repIndex >= S.reps){
+    clearTimers(); audio.pause(); audio.currentTime = t.a;
+    S.running = false; S.repIndex = 0; hideOv(); ui();
+    return;
+  }
+  beginRep(); ui();
+}
+function start(){
+  const t = cur(); if(!t) return;
+  if(t.broken || !t.url){
+    toast("Ce morceau doit être réimporté");
+    showTab("Lib");
+    return;
+  }
+  actx(); S.running = true; S.repIndex = 0;
+  if(t.loop){ beginRep(); }
+  else {
+    if(audio.currentTime >= t.duration-0.15) audio.currentTime = 0;
+    audio.play().catch(()=>{});
+  }
+  ui();
+}
+function stopAll(){ clearTimers(); annulerSons(); cancelAnimationFrame(prepRaf); S.attente = null; audio.pause(); S.running = false; hideOv(); ui(); }
+function toggle(){ if(!cur()) return; S.running ? stopAll() : start(); }
+function seek(s){
+  const t = cur(); if(!t) return;
+  audio.currentTime = clamp(s, 0, Math.max(0, t.duration-0.05));
+  dirty = true;
+}
+
+/* ---------------- écran maintenu allumé ----------------
+   En cours, le téléphone est posé sur une enceinte et s'éteint au bout de
+   trente secondes. Le verrou n'est pris que pendant la lecture, et le système
+   le relâche seul dès qu'on quitte l'onglet — on le reprend au retour. */
+let veille = null, veilleEnCours = false;
+function majVeille(){
+  const veut = S.running;
+  if(veut && !veille && !veilleEnCours && document.visibilityState === "visible"){
+    if(!navigator.wakeLock) return;
+    veilleEnCours = true;
+    navigator.wakeLock.request("screen").then(v => {
+      veilleEnCours = false;
+      if(!S.running){ v.release().catch(()=>{}); return; }   // arrêté entre-temps
+      veille = v;
+      v.addEventListener("release", () => { veille = null; });
+    }).catch(() => { veilleEnCours = false; });
+  } else if(!veut && veille){
+    const v = veille; veille = null;
+    v.release().catch(()=>{});
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible") majVeille();
+});
+
+/* ---------------- repères du passage ---------------- */
+function toast(msg){
+  const el = $("#toast");
+  el.textContent = msg; el.classList.add("on");
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 2100);
+}
+function snapTime(t, sec){
+  if(!t || t.snap === false || t.beat0 == null || !t.bpm) return sec;
+  const per = t.beatPer || 60/t.bpm;
+  return clamp(t.beat0 + Math.round((sec-t.beat0)/per)*per, 0, t.duration);
+}
+function pushUndo(t){ S.undo = { id:t.id, a:t.a, b:t.b }; }
+// Un passage de danse fait presque toujours un nombre rond de 8 temps.
+// Si la longueur en tombe tout près, on l'y amène : « 38 temps » devient « 5 × 8 ».
+function snapSpan(t, a, b){
+  if(!t || t.snap === false || t.beat0 == null || !t.bpm) return b;
+  const bloc = (t.beatPer || 60/t.bpm)*groupe(t);
+  const k = Math.max(1, Math.round((b-a)/bloc));
+  return clamp(a + k*bloc, a+0.3, t.duration);
+}
+function setStart(sec){
+  const t = cur(); if(!t) return;
+  pushUndo(t);
+  // Rien à répéter dans le silence d'intro : on part du premier vrai son.
+  if(t.head > 0.02 && sec < t.head) sec = startAfterBlank(t);
+  t.a = clamp(snapTime(t, sec), 0, Math.max(0, t.duration-0.5));
+  if(t.b <= t.a+0.25) t.b = Math.min(t.duration, t.a + Math.max(0.5, (t.beatPer || 60/(t.bpm||100))*groupe(t)));
+  save(t); dirty = true; ui();
+}
+function setEnd(sec){
+  const t = cur(); if(!t) return;
+  pushUndo(t);
+  t.b = clamp(snapTime(t, sec), t.a+0.3, t.duration);
+  t.b = snapSpan(t, t.a, t.b);
+  save(t); dirty = true; ui();
+}
+function planText(){
+  const t = cur(); if(!t) return "";
+  const bits = [t.loop ? "En boucle" : "Lecture simple"];
+  bits.push(S.countIn ? (S.countIn === 4 ? "départ sur 5-6-7-8" : "départ sur 8 temps") : "départ immédiat");
+  if(S.reps) bits.push(S.reps + " reprises");
+  if(S.rest) bits.push("pause " + S.rest + " s");
+  if(t.speed !== 1) bits.push("vitesse " + Math.round(t.speed*100) + " %");
+  return bits.join(" · ");
+}
+
+/* ---------------- canevas : vue, zoom, déplacement ---------------- */
+const cv = $("#wave"), cx = cv.getContext("2d");
+let W = 0, H = 0, dpr = 1, dirty = true;
+const P = {};
+const V = { s: 0, e: 1 };                       // fenêtre visible, en secondes
+const MIN_SPAN = 0.6;
+
+function palette(){
+  const st = getComputedStyle(document.documentElement);
+  const g = n => st.getPropertyValue(n).trim();
+  P.wave = g("--wave"); P.waveIn = g("--wave-in"); P.soft = g("--accent-soft");
+  P.accent = g("--accent"); P.ink = g("--ink"); P.ink3 = g("--ink3");
+  P.line = g("--line"); P.bg = g("--bg2"); P.aink = g("--accent-ink");
+  P.p50 = g("--p50"); P.p100 = g("--p100"); P.p200 = g("--p200"); P.p300 = g("--p300");
+  P.n200 = g("--n200"); P.n300 = g("--n300");
+}
+function resize(){
+  const r = cv.getBoundingClientRect();
+  if(!r.width) return;
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  W = r.width; H = r.height;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  palette(); dirty = true; draw();
+}
+function viewAll(){
+  const t = cur();
+  V.s = 0; V.e = t ? t.duration : 1; dirty = true;
+}
+function clampView(){
+  const t = cur(); if(!t) return;
+  let span = clamp(V.e-V.s, MIN_SPAN, t.duration);
+  if(V.s < 0) V.s = 0;
+  if(V.s + span > t.duration) V.s = Math.max(0, t.duration - span);
+  V.e = V.s + span;
+}
+function fitPassage(){
+  const t = cur(); if(!t) return;
+  const len = t.b - t.a, m = Math.max(0.6, len*0.28);
+  V.s = t.a - m; V.e = t.b + m;
+  clampView(); dirty = true;
+}
+function zoomAround(sec, factor){
+  const t = cur(); if(!t) return;
+  const span = clamp((V.e-V.s)*factor, MIN_SPAN, t.duration);
+  const r = (sec - V.s)/(V.e - V.s);
+  V.s = sec - r*span; V.e = V.s + span;
+  clampView(); dirty = true;
+}
+const X = sec => (sec - V.s)/(V.e - V.s)*W;
+const T = px  => V.s + (px/W)*(V.e - V.s);
+
+function roundRect(x, y, w, h, r){
+  if(cx.roundRect){ cx.beginPath(); cx.roundRect(x, y, w, h, r); return; }
+  cx.beginPath(); cx.rect(x, y, w, h);
+}
+function draw(){
+  cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cx.clearRect(0, 0, W, H);
+  const t = cur();
+  if(!t){
+    cx.fillStyle = P.ink3;
+    cx.font = "600 15px 'Plus Jakarta Sans', sans-serif";
+    cx.textAlign = "center";
+    cx.fillText("Importez une musique pour commencer", W/2, H/2);
+    return;
+  }
+  const mid = H*0.5, half = H*0.36;
+  const xa = X(t.a), xb = X(t.b);
+
+  // Le passage n'est pas un bloc : c'est une suite de comptes de 8 (ou de 6 en
+  // valse), numérotés. C'est ainsi qu'un prof lit une chorégraphie.
+  const rx0 = clamp(xa, -20, W+20), rx1 = clamp(xb, -20, W+20);
+  const per = t.bpm > 0 ? (t.beatPer || 60/t.bpm) : 0;
+  const g = groupe(t), bloc = per*g, cale = per > 0 && t.beat0 != null;
+
+  if(rx1 > rx0){
+    cx.save();
+    roundRect(rx0, 5, rx1-rx0, H-10, 14); cx.clip();
+    cx.fillStyle = P.p50; cx.fillRect(rx0, 5, rx1-rx0, H-10);
+    const larg = bloc/(V.e-V.s)*W;
+    if(cale && larg >= 14){
+      const n = Math.round((t.b-t.a)/bloc);
+      cx.fillStyle = P.p100;
+      for(let i=1; i<n && i<400; i+=2) cx.fillRect(X(t.a+i*bloc), 5, larg, H-10);
+      if(larg >= 30){
+        cx.fillStyle = P.accent; cx.globalAlpha = 0.55;
+        cx.font = "800 12.5px 'Plus Jakarta Sans', sans-serif";
+        cx.textAlign = "left";
+        for(let i=0; i<n && i<200; i++){
+          const x = X(t.a+i*bloc);
+          if(x > -20 && x < W) cx.fillText(String(i+1), x+7, 20);
+        }
+        cx.globalAlpha = 1;
+      }
+    }
+    cx.restore();
+    cx.strokeStyle = P.p200; cx.lineWidth = 1.5;
+    roundRect(rx0+0.75, 5.75, rx1-rx0-1.5, H-11.5, 13); cx.stroke();
+  }
+
+  // grille à trois niveaux : temps, mesures, comptes
+  if(per > 0){
+    const base = cale ? t.beat0 : t.a;
+    const pas = per/(V.e-V.s)*W;
+    if(pas >= 6){
+      const k0 = Math.floor((V.s-base)/per), k1 = Math.ceil((V.e-base)/per);
+      if(k1-k0 < 500){
+        for(let k=k0; k<=k1; k++){
+          const x = Math.round(X(base + k*per)) + 0.5;
+          if(x < 0 || x > W) continue;
+          const dedans = x >= xa && x <= xb;
+          const kk = ((k % g) + g) % g;
+          if(kk === 0){
+            cx.strokeStyle = dedans ? P.p300 : P.n300; cx.lineWidth = 1.5;
+            cx.beginPath(); cx.moveTo(x, 6); cx.lineTo(x, H-6); cx.stroke();
+          } else if(kk % (t.mesure || 4) === 0 && pas >= 10){
+            cx.strokeStyle = dedans ? P.p200 : P.n200; cx.lineWidth = 1;
+            cx.beginPath(); cx.moveTo(x, H*0.20); cx.lineTo(x, H*0.80); cx.stroke();
+          } else if(pas >= 14){
+            cx.strokeStyle = dedans ? P.p200 : P.n200; cx.lineWidth = 1;
+            cx.beginPath(); cx.moveTo(x, H*0.42); cx.lineTo(x, H*0.58); cx.stroke();
+          }
+        }
+      }
+    }
+  }
+
+  // barres à bouts arrondis : le vocabulaire « pilule » de Soonstep
+  const pk = t.peaks, N = pk.length/2;
+  const i0f = V.s/t.duration*N, i1f = V.e/t.duration*N;
+  const step = 4.5, barW = 2.8;
+  const nb = Math.max(1, Math.floor(W/step));
+  const amps = new Float32Array(nb);
+  let vmax = 0;
+  for(let i=0; i<nb; i++){
+    const a0 = i0f + (i1f-i0f)*(i/nb), a1 = i0f + (i1f-i0f)*((i+1)/nb);
+    let s0 = Math.max(0, Math.floor(a0)), s1 = Math.min(N, Math.max(s0+1, Math.ceil(a1)));
+    let m = 0;
+    for(let k=s0; k<s1; k++){
+      const lo = Math.abs(pk[k*2]), hi = Math.abs(pk[k*2+1]);
+      const v = lo > hi ? lo : hi;
+      if(v > m) m = v;
+    }
+    amps[i] = m; if(m > vmax) vmax = m;
+  }
+  const gain = 0.94/Math.max(vmax, 0.06);        // la partie visible occupe toujours la hauteur
+
+  cx.lineCap = "round";
+  cx.lineWidth = barW;
+  for(let i=0; i<nb; i++){
+    const x = (i + 0.5)*step + (W - nb*step)/2;
+    const h = Math.max(0.1, Math.min(1, amps[i]*gain))*half;
+    cx.strokeStyle = (x >= xa && x <= xb) ? P.waveIn : P.n300;
+    cx.beginPath();
+    cx.moveTo(x, mid-h); cx.lineTo(x, mid+h);
+    cx.stroke();
+  }
+  cx.lineCap = "butt";
+
+  handle(xa, "D", true); handle(xb, "F", false);
+
+  const xp = X(audio.currentTime || 0);
+  if(xp >= -6 && xp <= W+6){
+    cx.strokeStyle = P.ink; cx.lineWidth = 2.5; cx.lineCap = "round";
+    cx.beginPath(); cx.moveTo(xp, 8); cx.lineTo(xp, H-8); cx.stroke();
+    cx.lineCap = "butt";
+    cx.fillStyle = P.ink;
+    cx.beginPath(); cx.arc(xp, 8, 5, 0, Math.PI*2); cx.fill();
+  }
+}
+function handle(x, label, left){
+  if(x < -40 || x > W+40) return;
+  cx.strokeStyle = P.accent; cx.lineWidth = 3; cx.lineCap = "round";
+  cx.beginPath(); cx.moveTo(x, 6); cx.lineTo(x, H-6); cx.stroke();
+  cx.lineCap = "butt";
+  const w = 28, h = 26, bx = left ? x-1.5 : x-w+1.5, by = H-h-4;
+  cx.fillStyle = P.accent;
+  roundRect(bx, by, w, h, left ? [13,13,13,4] : [13,13,4,13]); cx.fill();
+  cx.fillStyle = P.aink;
+  cx.font = "800 13px 'Plus Jakarta Sans', sans-serif";
+  cx.textAlign = "center"; cx.textBaseline = "middle";
+  cx.fillText(label, bx + w/2, by + h/2 + 0.5);
+  cx.textBaseline = "alphabetic";
+  // pastille de préhension, pour attraper au doigt
+  cx.fillStyle = P.accent;
+  cx.beginPath(); cx.arc(x, mid_of(), 7, 0, Math.PI*2); cx.fill();
+  cx.fillStyle = P.aink;
+  cx.beginPath(); cx.arc(x, mid_of(), 2.5, 0, Math.PI*2); cx.fill();
+}
+function mid_of(){ return H*0.5; }
+
+/* --------- gestes : un doigt déplace, deux doigts zooment --------- */
+const pointers = new Map();
+let drag = null, pinch = null;
+
+function localX(e){ return e.clientX - cv.getBoundingClientRect().left; }
+
+cv.addEventListener("pointerdown", e => {
+  const t = cur(); if(!t) return;
+  try{ cv.setPointerCapture(e.pointerId); }catch(err){}
+  pointers.set(e.pointerId, localX(e));
+  $("#hint").style.opacity = "0";
+
+  if(pointers.size === 2){
+    const [x1, x2] = [...pointers.values()];
+    pinch = { t1: T(x1), t2: T(x2), ids: [...pointers.keys()] };
+    drag = null;
+    return;
+  }
+  const px = localX(e);
+  const near = 24;
+  let mode = "pan";
+  if(Math.abs(px - X(t.a)) < near) mode = "a";
+  else if(Math.abs(px - X(t.b)) < near) mode = "b";
+  if(mode !== "pan") pushUndo(t);
+  drag = { mode, x0: px, t0: T(px), s0: V.s, moved: false };
+  e.preventDefault();
+});
+
+cv.addEventListener("pointermove", e => {
+  const t = cur(); if(!t) return;
+  if(!pointers.has(e.pointerId)){
+    const px = localX(e);
+    cv.style.cursor = (Math.abs(px - X(t.a)) < 24 || Math.abs(px - X(t.b)) < 24) ? "ew-resize" : "grab";
+    return;
+  }
+  pointers.set(e.pointerId, localX(e));
+
+  if(pinch && pointers.size >= 2){
+    const [ax, bx] = pinch.ids.map(id => pointers.get(id));
+    if(ax == null || bx == null) return;
+    const dt = pinch.t2 - pinch.t1, dx = bx - ax;
+    if(Math.abs(dx) < 12 || Math.abs(dt) < 1e-4) return;
+    let span = clamp(W * dt / dx, MIN_SPAN, t.duration);
+    const k = W/span;
+    V.s = pinch.t1 - ax/k; V.e = V.s + span;
+    clampView(); dirty = true;
+    return;
+  }
+  if(!drag) return;
+  const px = localX(e);
+  if(Math.abs(px - drag.x0) > 4) drag.moved = true;
+
+  // L'aimantation agit pendant le glisser, pas au relâchement. Le début se pose
+  // sur le temps le plus proche ; la fin saute de compte entier en compte entier,
+  // pour qu'on voie le passage s'accrocher par blocs de 8.
+  if(drag.mode === "a")      t.a = clamp(snapTime(t, T(px)), 0, t.b-0.3);
+  else if(drag.mode === "b") t.b = snapSpan(t, t.a, clamp(snapTime(t, T(px)), t.a+0.3, t.duration));
+  else if(drag.moved){
+    const span = V.e - V.s;
+    V.s = drag.s0 + (drag.x0 - px)/W*span; V.e = V.s + span;
+    clampView();
+  }
+  dirty = true;
+  if(drag.mode !== "pan") ui();
+});
+
+function endPointer(e){
+  const t = cur();
+  pointers.delete(e.pointerId);
+  if(pointers.size < 2) pinch = null;
+  if(drag && t){
+    if(drag.mode === "pan" && !drag.moved) seek(drag.t0);
+    else if(drag.mode !== "pan"){
+      const a2 = snapTime(t, t.a), b2 = snapTime(t, t.b);
+      if(b2 - a2 >= 0.3){ t.a = a2; t.b = snapSpan(t, a2, b2); }
+      save(t);
+    }
+  }
+  if(pointers.size === 0) drag = null;
+  ui();
+}
+cv.addEventListener("pointerup", endPointer);
+cv.addEventListener("pointercancel", endPointer);
+
+cv.addEventListener("wheel", e => {
+  if(!cur()) return;
+  e.preventDefault();
+  zoomAround(T(localX(e)), e.deltaY > 0 ? 1.18 : 0.85);
+}, { passive: false });
+
+function zoomAnchor(){
+  const t = cur(); if(!t) return (V.s+V.e)/2;
+  const entier = t.a <= 0.02 && t.b >= t.duration-0.02;
+  return entier ? (V.s+V.e)/2 : (t.a+t.b)/2;   // on garde le passage au centre
+}
+$("#zoomIn").onclick  = () => zoomAround(zoomAnchor(), 0.6);
+$("#zoomOut").onclick = () => zoomAround(zoomAnchor(), 1.7);
+$("#zoomFit").onclick = () => { fitPassage(); toast("Zoom sur le passage"); };
+$("#zoomAll").onclick = () => { viewAll(); toast("Morceau entier"); };
+
+/* ---------------- rendu de l'interface ---------------- */
+// Nombre de temps par groupe : 8 en 4 temps, 6 en valse (deux mesures de 3).
+function groupe(t){ return (t && t.mesure === 3) ? 6 : 8; }
+function counts(t, sec){
+  if(!t || !t.bpm || sec <= 0) return "";
+  const per = t.beatPer || 60/t.bpm, g = groupe(t);
+  const beats = sec/per, e = beats/g, r = Math.round(e);
+  if(r >= 1 && Math.abs(e-r) < 0.14) return r + " × " + g + " temps";
+  return Math.round(beats) + " temps";
+}
+function ui(){
+  const t = cur();
+  $("#trackName").textContent = t ? t.name : "Aucun morceau";
+  $("#icPlay").innerHTML = S.running
+    ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'
+    : '<path d="M8 5v14l11-7z"/>';
+  $("#btnPlay").setAttribute("aria-label", S.running ? "Pause" : "Lecture");
+
+  if(t){
+    const len = t.b-t.a, c = counts(t, len);
+    $("#badgeLoop").textContent = fmtS(t.a) + " → " + fmtS(t.b);
+    $("#badgeLoop").className = "badge"+(t.loop ? " hot" : "");
+    $("#timeMeta").textContent = (c || Math.round(len)+" s")
+      +" · reprise "+(S.repIndex+1)+(S.reps ? "/"+S.reps : "");
+    $("#btnLoop").classList.toggle("on", !!t.loop);
+    $("#speed").value = Math.round(t.speed*100);
+    $("#speedVal").textContent = Math.round(t.speed*100)+" %";
+    $("#speedBpm").textContent = Math.round((t.bpm||100)*t.speed)+" bpm perçus";
+    $("#bpm").value = t.bpm||100;
+    [...$("#speedChips").children].forEach(c2 => c2.classList.toggle("on", +c2.dataset.v === Math.round(t.speed*100)));
+    $("#bpmNote").textContent = (t.bpmInfo || "sert au compte de départ et au repérage en 8-temps sur la vague")
+      + (t.head > 0.05 ? " · blanc de départ détecté : " + t.head.toFixed(2).replace(".", ",") + " s, ignoré." : "");
+    $("#planText").textContent = planText();
+    [...$("#snapChips").children].forEach(c2 => c2.classList.toggle("on", (c2.dataset.v === "1") === (t.snap !== false)));
+    [...$("#mesureChips").children].forEach(c2 => c2.classList.toggle("on", +c2.dataset.v === (t.mesure || 4)));
+    $("#mesureNote").textContent = t.mesure === 3
+      ? "Valse : les passages s'arrondissent à des groupes de 6 temps et le compte part sur 1-2-3."
+      : "Cas courant : les passages s'arrondissent à des groupes de 8 temps et le compte part sur 5-6-7-8.";
+    $("#snapNote").textContent = t.beat0 == null
+      ? "Le tempo n'a pas été reconnu sur ce morceau : les repères restent libres. Lancez « Analyser le morceau » ci-dessous pour activer le calage."
+      : (t.snap !== false
+          ? "Le début se pose sur le temps le plus proche, et le passage est arrondi à un nombre entier de " + groupe(t) + " temps. La boucle tombe juste sans réglage au doigt."
+          : "Le début et la fin se posent exactement là où vous appuyez, sans arrondi.");
+  }
+  [...$("#countChips").children].forEach(c => c.classList.toggle("on", +c.dataset.v === S.countIn));
+  [...$("#repChips").children].forEach(c => c.classList.toggle("on", +c.dataset.v === S.reps));
+  [...$("#restChips").children].forEach(c => c.classList.toggle("on", +c.dataset.v === S.rest));
+  $("#countNote").textContent = S.countIn
+    ? "un clic sur " + (S.countIn === 4 ? "5-6-7-8" : S.countIn + " temps") + " avant chaque reprise"
+    : "la boucle repart sans compte";
+  const nsec = t ? t.sections.length : 0;
+  $("#secCount").textContent = nsec;
+  $("#secCount").hidden = nsec === 0;
+  majVeille();
+  $("#btnUndo").hidden = !(S.undo && t && S.undo.id === t.id);
+  $("#onboard").hidden = obHidden || S.tracks.length > 1;
+  renderSecs();
+}
+function updateClock(){
+  $("#timeNow").textContent = fmt(audio.currentTime||0);
+}
+function renderTracks(){
+  const box = $("#tracks"); box.innerHTML = "";
+  S.tracks.forEach(t => {
+    const b = document.createElement("button");
+    b.className = "track"+(t.id===S.cur ? " on" : "");
+    b.innerHTML = '<span class="dot"></span><span class="nm"></span><span class="du">'+
+      (t.broken ? "à réimporter" : fmtS(t.duration))+"</span>";
+    b.querySelector(".nm").textContent = t.name;
+    if(t.broken) b.classList.add("broken");
+    b.onclick = () => { selectTrack(t.id); showTab("Loop"); };
+    if(!t.demo){
+      const k = document.createElement("span");
+      k.className = "kill"; k.textContent = "×"; k.title = "Retirer de la bibliothèque"; k.setAttribute("role","button");
+      k.onclick = ev => { ev.stopPropagation(); removeTrack(t.id); };
+      b.appendChild(k);
+    }
+    box.appendChild(b);
+  });
+}
+function renderSecs(){
+  const t = cur(), box = $("#secs"); box.innerHTML = "";
+  if(!t || !t.sections.length){
+    box.innerHTML = '<p class="empty">Délimitez un passage sur la vague, puis « mémoriser le passage » pour le retrouver d\'un clic à chaque cours.</p>';
+    return;
+  }
+  t.sections.forEach((sec, i) => {
+    const on = Math.abs(sec.a-t.a) < .02 && Math.abs(sec.b-t.b) < .02;
+    const el = document.createElement("div");
+    el.className = "sec"+(on ? " on" : "");
+    el.innerHTML =
+      '<button class="go" title="Lancer cette section"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>'+
+      '<div class="body"><input class="nm" value=""><div class="rng"></div></div>'+
+      '<div class="acts"><button class="upd" title="Redéfinir depuis le passage courant">maj</button>'+
+      '<button class="del" title="Supprimer">×</button></div>';
+    const c = counts(t, sec.b-sec.a);
+    el.querySelector(".nm").value = sec.name;
+    el.querySelector(".rng").textContent = fmtS(sec.a)+" → "+fmtS(sec.b)+(c ? " · "+c : "");
+    el.querySelector(".go").onclick = () => playSection(i);
+    el.querySelector(".nm").oninput = e => { sec.name = e.target.value; save(t); };
+    el.querySelector(".upd").onclick = () => { sec.a = t.a; sec.b = t.b; save(t); ui(); };
+    el.querySelector(".del").onclick = () => { t.sections.splice(i,1); save(t); ui(); };
+    box.appendChild(el);
+  });
+}
+function playSection(i){
+  const t = cur(), sec = t.sections[i]; if(!sec) return;
+  t.a = sec.a; t.b = sec.b; t.loop = true;
+  save(t); fitPassage(); showTab("Loop"); start();
+}
+
+/* ---------------- bibliothèque ---------------- */
+function selectTrack(id){
+  stopAll();
+  S.cur = id;
+  const t = cur(); if(!t) return;
+  if(t.url) audio.src = t.url; else audio.removeAttribute("src");
+  audio.playbackRate = t.speed;
+  audio.currentTime = t.a || 0;
+  S.undo = null; viewAll();
+  analyseSiBesoin(t);
+  if(S.countIn) S.countIn = t.mesure === 3 ? (S.countIn >= 6 ? 6 : 3) : (S.countIn >= 6 ? 8 : 4);
+  majCompte();
+  renderTracks(); dirty = true; ui();
+}
+// Un morceau importé par une ancienne version n'a pas de grille : on l'analyse
+// en silence au moment où on l'ouvre, plutôt que d'attendre un geste.
+async function analyseSiBesoin(t){
+  if(!t || t.demo || t.broken || t.beat0 != null || t.analyse) return;
+  t.analyse = true;
+  try{
+    const buf = await actx().decodeAudioData(await t.blob.arrayBuffer());
+    const det = analyseTempo(buf);
+    if(det){
+      t.bpm = det.bpm; t.beatPer = det.period;
+      t.beat0 = (det.conf >= 8 && det.phConf >= 1.3) ? det.beat0 : null;
+      if(det.mesureSure) t.mesure = det.mesure;
+      t.bpmInfo = tempoNote(det);
+    }
+    t.head = firstSound(buf);
+    dbPut(t);
+    if(cur() === t){ dirty = true; ui(); if(t.beat0 != null) toast(t.bpm + " bpm · repères calés"); }
+  }catch(e){ t.broken = true; renderTracks(); }
+}
+
+async function removeTrack(id){
+  const t = S.tracks.find(x => x.id===id); if(!t) return;
+  if(S.cur === id) stopAll();
+  try{ URL.revokeObjectURL(t.url); }catch(e){}
+  S.tracks = S.tracks.filter(x => x.id!==id);
+  await dbDel(id);
+  if(S.cur === id) S.cur = S.tracks.length ? S.tracks[0].id : null;
+  if(S.cur) selectTrack(S.cur); else { renderTracks(); dirty = true; ui(); }
+}
+async function addFiles(files){
+  const list = [...files].filter(f => f.type.startsWith("audio/") || /\.(mp3|m4a|wav|aac|ogg|flac|aiff?)$/i.test(f.name));
+  if(!list.length) return;
+  const c = actx();
+  for(const f of list){
+    let buf = null, blob = null;
+    try{
+      const ab = await f.arrayBuffer();
+      // Copie des octets : un File conservé dans IndexedDB n'est qu'une référence
+      // au fichier sur disque, que Safari ne sait plus résoudre après rechargement.
+      blob = new Blob([ab], { type: f.type || "audio/mpeg" });
+      buf = await c.decodeAudioData(ab);
+    }
+    catch(e){ alert("Impossible de lire « "+f.name+" ». Essayez un mp3, un m4a ou un wav."); continue; }
+    const det = analyseTempo(buf);
+    const head = firstSound(buf);
+    const t = {
+      id: uid(), name: f.name.replace(/\.[^.]+$/,""), blob, url: URL.createObjectURL(blob),
+      duration: buf.duration, peaks: peaksFromBuffer(buf),
+      bpm: det ? det.bpm : 100, bpmInfo: tempoNote(det),
+      beat0: (det && det.conf >= 8 && det.phConf >= 1.3) ? det.beat0 : null,
+      beatPer: det ? det.period : null, snap: true, head,
+      mesure: (det && det.mesureSure) ? det.mesure : 4,
+      speed: 1, loop: true,
+      a: 0, b: 0, sections: [], added: Date.now()
+    };
+    t.a = startAfterBlank(t);
+    t.b = Math.min(buf.duration, t.a + 30);
+    t.b = snapSpan(t, t.a, t.b);          // ~30 s, arrondi au compte entier
+    S.tracks.push(t); dbPut(t); selectTrack(t.id);
+    toast(t.name.slice(0, 22) + " · " + t.bpm + " bpm"
+      + (head > 0.03 ? " · blanc de " + head.toFixed(2).replace(".", ",") + " s ignoré" : ""));
+  }
+}
+
+/* ---------------- commandes ---------------- */
+$("#btnPlay").onclick = toggle;
+$("#btnA").onclick = () => {
+  if(!cur()) return;
+  setStart(audio.currentTime);
+  toast("Début du passage marqué");
+};
+$("#btnB").onclick = () => {
+  const t = cur(); if(!t) return;
+  const now = audio.currentTime;
+  if(now <= t.a + 0.3){ setStart(now); toast("Début du passage marqué"); return; }
+  setEnd(now);
+  t.loop = true; save(t);
+  fitPassage();
+  if(S.running){ S.repIndex = 0; beginRep(); }
+  ui();
+  toast("Passage bouclé : " + (counts(t, t.b-t.a) || Math.round(t.b-t.a) + " s"));
+};
+$("#btnLoop").onclick = () => { const t = cur(); if(!t) return; t.loop = !t.loop; save(t); ui(); };
+$("#btnAll").onclick = () => {
+  const t = cur(); if(!t) return;
+  pushUndo(t);
+  t.a = startAfterBlank(t);
+  t.b = t.duration;
+  save(t); viewAll(); ui();
+  toast((t.head > 0.05 ? "Morceau entier, blanc de départ ignoré" : "Morceau entier"));
+};
+$("#btnUndo").onclick = () => {
+  const u = S.undo, t = cur();
+  if(!u || !t || u.id !== t.id) return;
+  const back = { id: t.id, a: t.a, b: t.b };
+  t.a = u.a; t.b = u.b; S.undo = back;
+  save(t); fitPassage(); ui();
+  toast("Passage rétabli");
+};
+function memoriser(){
+  const t = cur(); if(!t) return;
+  t.sections.push({ id: uid(), name: "Passage " + (t.sections.length+1), a: t.a, b: t.b });
+  save(t); ui();
+  toast("Passage mémorisé");
+}
+$("#btnMemo2").onclick = memoriser;
+$("#addSec").onclick = memoriser;
+$("#planLine").onclick = () => showTab("Set");
+let obHidden = false;
+try{ obHidden = localStorage.getItem("repeat.ob") === "1"; }catch(e){}
+$("#dismissOb").onclick = () => {
+  obHidden = true;
+  try{ localStorage.setItem("repeat.ob", "1"); }catch(e){}
+  ui();
+};
+$("#speed").oninput = e => {
+  const t = cur(); if(!t) return;
+  t.speed = +e.target.value/100; audio.playbackRate = t.speed; save(t); ui();
+};
+$("#bpm").oninput = e => {
+  const t = cur(); if(!t) return;
+  t.bpm = clamp(+e.target.value||100, 30, 240); t.beatPer = 60/t.bpm; t.bpmInfo = ""; save(t); dirty = true; ui();
+};
+const scaleBpm = k => {
+  const t = cur(); if(!t) return;
+  t.bpm = clamp(Math.round(t.bpm*k), 30, 240); t.beatPer = 60/t.bpm;
+  t.bpmInfo = "tempo ajusté : " + t.bpm + " bpm";
+  save(t); dirty = true; ui();
+};
+$("#halfBpm").onclick = () => scaleBpm(0.5);
+$("#dblBpm").onclick  = () => scaleBpm(2);
+$("#detect").onclick = async () => {
+  const t = cur(); if(!t || !t.blob) return;
+  $("#detect").disabled = true;
+  $("#bpmNote").textContent = "analyse du tempo en cours…";
+  await new Promise(r => setTimeout(r, 30));
+  try{
+    const buf = await actx().decodeAudioData(await t.blob.arrayBuffer());
+    const det = analyseTempo(buf);
+    if(det){
+      t.bpm = det.bpm; t.beatPer = det.period;
+      t.beat0 = (det.conf >= 8 && det.phConf >= 1.3) ? det.beat0 : null;
+      if(det.mesureSure) t.mesure = det.mesure;
+    }
+    t.head = firstSound(buf);
+    if(t.a < t.head - 0.02) t.a = clamp(startAfterBlank(t), 0, t.b-0.3);
+    t.bpmInfo = tempoNote(det);
+    save(t);
+  }catch(err){
+    t.broken = true; renderTracks();
+    t.bpmInfo = "Le fichier n'est plus accessible : réimportez ce morceau depuis l'onglet Musiques.";
+  }
+  $("#detect").disabled = false;
+  dirty = true; ui();
+  toast(cur() && cur().bpm ? cur().bpm + " bpm" : "analyse terminée");
+};
+let taps = [];
+$("#tap").onclick = () => {
+  const t = cur(), now = performance.now();
+  taps = taps.filter(x => now-x < 2600); taps.push(now);
+  if(taps.length >= 3){
+    let sum = 0; for(let i=1;i<taps.length;i++) sum += taps[i]-taps[i-1];
+    const bpm = Math.round(60000/(sum/(taps.length-1)));
+    if(t && bpm>=30 && bpm<=240){ t.bpm = bpm; t.beatPer = 60/bpm; t.bpmInfo = "tempo frappé : "+bpm+" bpm"; save(t); dirty = true; }
+  }
+  $("#tap").textContent = taps.length<3 ? "Encore… ("+taps.length+"/3)" : "Taper le tempo";
+  clearTimeout($("#tap")._r);
+  $("#tap")._r = setTimeout(()=>{ taps = []; $("#tap").textContent = "Taper le tempo"; }, 2600);
+  ui();
+};
+function chips(host, items, onPick){
+  host.innerHTML = "";
+  items.forEach(it => {
+    const b = document.createElement("button");
+    b.className = "chip"; b.dataset.v = it.v; b.textContent = it.l;
+    b.onclick = () => onPick(it.v);
+    host.appendChild(b);
+  });
+}
+chips($("#speedChips"), [50,60,70,80,90,100].map(v => ({v, l:v+"%"})), v => {
+  const t = cur(); if(!t) return;
+  t.speed = v/100; audio.playbackRate = t.speed; save(t); ui();
+});
+function majCompte(){
+  const t = cur(), trois = t && t.mesure === 3;
+  chips($("#countChips"), trois
+    ? [{v:0,l:"sans"},{v:3,l:"1-2-3"},{v:6,l:"6 temps"}]
+    : [{v:0,l:"sans"},{v:4,l:"5-6-7-8"},{v:8,l:"8 temps"}],
+    v => { S.countIn = v; ui(); });
+}
+majCompte();
+chips($("#mesureChips"), [{v:4,l:"4 temps · comptes de 8"},{v:3,l:"3 temps · valse"}], v => {
+  const t = cur(); if(!t) return;
+  t.mesure = v;
+  if(S.countIn) S.countIn = v === 3 ? (S.countIn >= 6 ? 6 : 3) : (S.countIn >= 6 ? 8 : 4);
+  majCompte(); save(t); dirty = true; ui();
+});
+chips($("#repChips"), [{v:0,l:"∞"},{v:2,l:"×2"},{v:4,l:"×4"},{v:8,l:"×8"},{v:16,l:"×16"}], v => { S.reps = v; S.repIndex = 0; ui(); });
+chips($("#snapChips"), [{v:1,l:"Caler sur les temps"},{v:0,l:"Repères libres"}], v => {
+  const t = cur(); if(!t) return;
+  t.snap = !!v; save(t); ui();
+});
+chips($("#restChips"), [{v:0,l:"aucune"},{v:3,l:"3 s"},{v:5,l:"5 s"},{v:10,l:"10 s"}], v => { S.rest = v; ui(); });
+
+$("#btnImport").onclick = () => $("#file").click();
+$("#file").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+const shell = $("#drop");
+["dragenter","dragover"].forEach(ev => shell.addEventListener(ev, e => {
+  e.preventDefault(); shell.classList.add("drag");
+}));
+["dragleave","drop"].forEach(ev => shell.addEventListener(ev, e => {
+  e.preventDefault();
+  if(ev==="drop" || !shell.contains(e.relatedTarget)) shell.classList.remove("drag");
+}));
+shell.addEventListener("drop", e => { if(e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files); });
+
+/* ---------------- onglets ---------------- */
+const TABS = ["Loop","Secs","Lib","Set"];
+function showTab(name){
+  TABS.forEach(n => {
+    $("#tab"+n).classList.toggle("on", n===name);
+    $("#view"+n).hidden = n!==name;
+  });
+}
+TABS.forEach(n => { $("#tab"+n).onclick = () => showTab(n); });
+
+/* ---------------- installation sur l'écran d'accueil ---------------- */
+let installEvent = null;
+const hasManifest = !!document.querySelector('link[rel="manifest"]');
+const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function showInstall(html){
+  const box = $("#installBox"); if(!box) return;
+  box.hidden = false; $("#installBody").innerHTML = html;
+}
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault(); installEvent = e;
+  if(standalone) return;
+  showInstall('<button class="wide" id="doInstall">Installer sur cet appareil</button>');
+  const b = $("#doInstall");
+  if(b) b.onclick = async () => {
+    if(!installEvent) return;
+    installEvent.prompt();
+    await installEvent.userChoice;
+    installEvent = null; $("#installBox").hidden = true;
+  };
+});
+window.addEventListener("appinstalled", () => { const b = $("#installBox"); if(b) b.hidden = true; });
+if(hasManifest && !standalone && /iP(hone|ad|od)/.test(navigator.userAgent)){
+  showInstall('<p class="note">Sur iPhone : touchez <b>Partager</b> dans Safari, puis <b>Sur l\'écran d\'accueil</b>. Repeat s\'ouvrira ensuite en plein écran, sans connexion.</p>');
+}
+
+/* ---------------- boucle d'affichage ---------------- */
+audio.addEventListener("ended", () => { if(!cur() || !cur().loop) stopAll(); });
+audio.addEventListener("error", () => {
+  const t = cur();
+  if(t && !t.demo){
+    t.broken = true; stopAll(); renderTracks();
+    toast("Fichier introuvable — réimportez ce morceau");
+  }
+});
+function frame(){
+  const t = cur();
+  if(S.running && t && !audio.paused){
+    if(t.loop && audio.currentTime >= t.b-0.014) endRep();
+    else if(!t.loop && audio.currentTime >= t.duration-0.05) stopAll();
+  }
+  // latence réelle de play() : on la mesure au premier instant où le son avance
+  if(S.attente && !audio.paused && ac && audio.currentTime > S.attente.base + 0.0005){
+    const mesure = ac.currentTime - S.attente.appel;
+    if(mesure >= 0 && mesure < 0.5) S.lat = clamp(S.lat*0.6 + mesure*0.4, 0, 0.4);
+    S.attente = null;
+  }
+  if(S.running && t){
+    const xp = X(audio.currentTime);
+    if(xp < W*0.05 || xp > W*0.95){
+      const span = V.e - V.s;
+      V.s = audio.currentTime - span*0.35; V.e = V.s + span;
+      clampView(); dirty = true;
+    }
+  }
+  if(S.running || dirty){ updateClock(); draw(); dirty = false; }
+  requestAnimationFrame(frame);
+}
+
+/* ---------------- démarrage ---------------- */
+window.addEventListener("resize", resize);
+new MutationObserver(() => { palette(); dirty = true; })
+  .observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] });
+
+setTimeout(() => { const h = $("#hint"); if(h) h.style.opacity = "0"; }, 7000);
+
+(async function init(){
+  const stored = await dbAll();
+  stored.sort((a,b) => (a.added||0)-(b.added||0));
+  for(const r of stored){
+    let ok = false;
+    try{ await r.blob.slice(0, 1).arrayBuffer(); ok = true; }catch(e){}
+    try{
+      S.tracks.push(Object.assign({}, r, {
+        url: ok ? URL.createObjectURL(r.blob) : "",
+        broken: !ok,
+        sections: r.sections || []
+      }));
+    }catch(e){}
+  }
+  S.tracks.push(makeDemo());
+  resize();
+  selectTrack(S.tracks[0].id);
+  requestAnimationFrame(frame);
+})();
+})();
+</script>
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => { navigator.serviceWorker.register("./sw.js").catch(() => {}); });
+}
+</script>
+</body>
+</html>

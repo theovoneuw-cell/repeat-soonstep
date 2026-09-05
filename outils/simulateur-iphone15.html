@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Repeat sur iPhone 15</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
+<style>
+  :root{ --n900:#0f172a; --n600:#475569; --n400:#94a3b8; --n200:#e2e8f0; --p600:#7c3aed; --p50:#f5f3ff; }
+  *{box-sizing:border-box}
+  body{ margin:0; background:#eef0f4; color:var(--n900); min-height:100vh;
+    font-family:'Plus Jakarta Sans',-apple-system,sans-serif;
+    display:flex; flex-direction:column; align-items:center; padding:14px 16px 24px; }
+  h1{font-size:16px;font-weight:800;margin:0 0 2px;letter-spacing:-.02em}
+  .sub{font-size:12.5px;color:var(--n600);margin:0 0 14px;text-align:center}
+  .rangee{display:flex;gap:36px;align-items:flex-start}
+  .poste{display:flex;flex-direction:column;align-items:center;gap:9px}
+  .titre{font-size:12px;font-weight:800}
+  .dim{font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--n400)}
+  .iphone{position:relative;background:#1c1c1e;border-radius:56px;padding:11px;
+    box-shadow:0 20px 44px rgba(15,23,42,.30), inset 0 0 0 2px #3a3a3c;transform-origin:top center}
+  .ecran{position:relative;width:393px;border-radius:46px;overflow:hidden;background:#fff}
+  .ecran iframe{display:block;width:393px;border:0}
+  .ile{position:absolute;top:11px;left:50%;transform:translateX(-50%);
+    width:124px;height:35px;background:#000;border-radius:20px;z-index:3;pointer-events:none}
+  .statut{position:absolute;top:0;left:0;right:0;height:59px;z-index:2;pointer-events:none;
+    display:flex;align-items:center;justify-content:space-between;padding:14px 30px 0;
+    font-size:14px;font-weight:700;color:#000}
+  .barre{position:absolute;bottom:0;left:0;right:0;height:34px;z-index:2;pointer-events:none;
+    display:grid;place-items:center}
+  .barre i{display:block;width:140px;height:5px;border-radius:3px;background:rgba(0,0,0,.35)}
+  .safari-haut{height:52px;background:#f6f6f8;border-bottom:1px solid #d9d9de;z-index:2;
+    display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:13px;color:#3c3c43}
+  .safari-bas{height:82px;background:#f6f6f8;border-top:1px solid #d9d9de;
+    display:flex;align-items:center;justify-content:space-around;padding:0 22px 22px;font-size:19px;color:#8e8e93}
+  .outils{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;justify-content:center}
+  .outils button{font:inherit;font-size:12.5px;font-weight:700;padding:7px 14px;border-radius:999px;
+    border:1px solid var(--n200);background:#fff;color:var(--n600);cursor:pointer}
+  .outils button.on{background:var(--p600);border-color:var(--p600);color:#fff}
+</style>
+</head>
+<body>
+  <h1>Repeat · simulation iPhone 15</h1>
+  <p class="sub">Écran de 393 × 852 points, aux dimensions réelles.<br>À gauche installée sur l'écran d'accueil, à droite ouverte dans Safari iOS.</p>
+  <div class="outils" id="outils"></div>
+  <div class="rangee">
+    <div class="poste">
+      <div class="titre">Installée sur l'écran d'accueil</div>
+      <div class="dim">393 × 852 · plein écran</div>
+      <div class="iphone">
+        <div class="ile"></div><div class="statut"><span>9:41</span><span>▮▮▮</span></div>
+        <div class="ecran"><iframe src="./repete.html" style="height:852px"></iframe></div>
+        <div class="barre"><i></i></div>
+      </div>
+    </div>
+    <div class="poste">
+      <div class="titre">Dans Safari iOS</div>
+      <div class="dim">393 × 659 · barres du navigateur</div>
+      <div class="iphone">
+        <div class="ile"></div><div class="statut"><span>9:41</span><span>▮▮▮</span></div>
+        <div class="ecran">
+          <div class="safari-haut">localhost</div>
+          <iframe src="./repete.html" style="height:659px"></iframe>
+          <div class="safari-bas"><span>‹</span><span>›</span><span>↑</span><span>▤</span><span>⧉</span></div>
+        </div>
+        <div class="barre"><i></i></div>
+      </div>
+    </div>
+  </div>
+<script>
+  const outils = document.getElementById("outils");
+  let choisie = null;
+  function applique(s){
+    choisie = s;
+    document.querySelectorAll(".iphone").forEach(el => el.style.transform = "scale(" + s + ")");
+    document.querySelectorAll(".poste").forEach(p => {
+      p.style.height = (p.querySelector(".iphone").offsetHeight * s + 46) + "px";
+    });
+    [...outils.children].forEach(b => b.classList.toggle("on", +b.dataset.s === s));
+  }
+  [0.6,0.7,0.8,0.9,1].forEach(s => {
+    const b = document.createElement("button");
+    b.dataset.s = s; b.textContent = Math.round(s*100) + " %";
+    b.onclick = () => applique(s);
+    outils.appendChild(b);
+  });
+  function auto(){ applique(Math.round(Math.max(0.5, Math.min(1, (innerHeight-150)/898))*20)/20); }
+  auto();
+  addEventListener("resize", () => { if(choisie === null) auto(); });
+  // env(safe-area-inset-*) vaut 0 dans un iframe : on injecte les vraies marges
+  const marges = [[59,34],[0,0]];
+  document.querySelectorAll("iframe").forEach((f,i) => f.addEventListener("load", () => {
+    const [h,b] = marges[i]; if(!h && !b) return;
+    const st = f.contentDocument.createElement("style");
+    st.textContent = ".appbar{padding-top:"+h+"px!important}.tabbar{padding-bottom:"+b+"px!important}";
+    f.contentDocument.head.appendChild(st);
+  }));
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "Repeat by Soonstep",
+  "short_name": "Repeat",
+  "description": "Boucler un passage, le ralentir sans le désaccorder, repartir sur un vrai compte.",
+  "lang": "fr", "dir": "ltr",
+  "start_url": "./", "scope": "./",
+  "display": "standalone", "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#ffffff", "theme_color": "#7c3aed",
+  "categories": ["music", "education", "productivity"],
+  "icons": [
+    { "src": "./icons/soonstep-mark.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" },
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
